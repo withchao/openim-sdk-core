@@ -135,3 +135,7 @@ func SearchGroupMembers(callback open_im_sdk_callback.Base, operationID string, 
 func IsJoinGroup(callback open_im_sdk_callback.Base, operationID string, groupID string) {
 	call(callback, operationID, UserForSDK.Group().IsJoinGroup, groupID)
 }
+
+func GetGroupOnline(callback open_im_sdk_callback.Base, operationID string, groupID string, pageNumber int32, showNumber int32) {
+	call(callback, operationID, UserForSDK.Group().GetGroupOnline, groupID, pageNumber, showNumber)
+}

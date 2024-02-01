@@ -22,6 +22,7 @@ import (
 	"errors"
 	"github.com/OpenIMSDK/protocol/group"
 	"github.com/OpenIMSDK/protocol/sdkws"
+	"github.com/OpenIMSDK/protocol/user"
 	"github.com/OpenIMSDK/tools/log"
 	utils2 "github.com/OpenIMSDK/tools/utils"
 	"github.com/openimsdk/openim-sdk-core/v3/internal/util"
@@ -279,4 +280,12 @@ func (g *Group) GetGroupAbstractInfo(ctx context.Context, groupID string) (*grou
 		return nil, errors.New("group not found")
 	}
 	return resp.GroupAbstractInfos[0], nil
+}
+
+func (g *Group) GetGroupOnline(ctx context.Context, groupID string, pageNumber int32, showNumber int32) (int64, []string, error) {
+	resp, err := util.CallApi[user.GetGroupOnlineUserResp](ctx, constant.GetGroupOnlineRouter, &user.GetGroupOnlineUserReq{GroupID: groupID, Desc: false, Pagination: &sdkws.RequestPagination{PageNumber: pageNumber, ShowNumber: showNumber}})
+	if err != nil {
+		return 0, nil, err
+	}
+	return resp.Total, resp.UserIDs, nil
 }
