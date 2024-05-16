@@ -137,14 +137,10 @@ func (f *Friend) DeleteFriend(ctx context.Context, friendUserID string) error {
 	if err := util.ApiPost(ctx, constant.DeleteFriendRouter, &friend.DeleteFriendReq{OwnerUserID: f.loginUserID, FriendUserID: friendUserID}, nil); err != nil {
 		return err
 	}
-	return f.deleteFriend(ctx, friendUserID)
+	return f.deleteLocalFriend(ctx, []string{friendUserID})
 }
 
-func (f *Friend) GetFriendList(ctx context.Context) ([]*server_api_params.FullUserInfo, error) {
-	localFriendList, err := f.db.GetAllFriendList(ctx)
-	if err != nil {
-		return nil, err
-	}
+func (f *Friend) localFriendToFullUserInfo(ctx context.Context, localFriendList []*model_struct.LocalFriend) ([]*server_api_params.FullUserInfo, error) {
 	localBlackList, err := f.db.GetBlackListDB(ctx)
 	if err != nil {
 		return nil, err
@@ -162,6 +158,14 @@ func (f *Friend) GetFriendList(ctx context.Context) ([]*server_api_params.FullUs
 		})
 	}
 	return res, nil
+}
+
+func (f *Friend) GetFriendList(ctx context.Context) ([]*server_api_params.FullUserInfo, error) {
+	localFriendList, err := f.db.GetAllFriendList(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return f.localFriendToFullUserInfo(ctx, localFriendList)
 }
 
 func (f *Friend) GetFriendListPage(ctx context.Context, offset, count int32) ([]*server_api_params.FullUserInfo, error) {
@@ -188,14 +192,7 @@ func (f *Friend) GetFriendListPage(ctx context.Context, offset, count int32) ([]
 	return res, nil
 }
 
-func (f *Friend) SearchFriends(ctx context.Context, param *sdk.SearchFriendsParam) ([]*sdk.SearchFriendItem, error) {
-	if len(param.KeywordList) == 0 || (!param.IsSearchNickname && !param.IsSearchUserID && !param.IsSearchRemark) {
-		return nil, sdkerrs.ErrArgs.WrapMsg("keyword is null or search field all false")
-	}
-	localFriendList, err := f.db.SearchFriendList(ctx, param.KeywordList[0], param.IsSearchUserID, param.IsSearchNickname, param.IsSearchRemark)
-	if err != nil {
-		return nil, err
-	}
+func (f *Friend) toSearchFriendItem(ctx context.Context, localFriendList []*model_struct.LocalFriend) ([]*sdk.SearchFriendItem, error) {
 	localBlackList, err := f.db.GetBlackListDB(ctx)
 	if err != nil {
 		return nil, err
@@ -218,6 +215,17 @@ func (f *Friend) SearchFriends(ctx context.Context, param *sdk.SearchFriendsPara
 		})
 	}
 	return res, nil
+}
+
+func (f *Friend) SearchFriends(ctx context.Context, param *sdk.SearchFriendsParam) ([]*sdk.SearchFriendItem, error) {
+	if len(param.KeywordList) == 0 || (!param.IsSearchNickname && !param.IsSearchUserID && !param.IsSearchRemark) {
+		return nil, sdkerrs.ErrArgs.WrapMsg("keyword is null or search field all false")
+	}
+	localFriendList, err := f.db.SearchFriendList(ctx, param.KeywordList[0], param.IsSearchUserID, param.IsSearchNickname, param.IsSearchRemark)
+	if err != nil {
+		return nil, err
+	}
+	return f.toSearchFriendItem(ctx, localFriendList)
 }
 
 func (f *Friend) SetFriendRemark(ctx context.Context, userIDRemark *sdk.SetFriendRemarkParams) error {

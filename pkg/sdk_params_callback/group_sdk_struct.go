@@ -60,9 +60,8 @@ type SearchGroupMembersParam struct {
 	IsSearchUserID         bool     `json:"isSearchUserID"`
 	IsSearchMemberNickname bool     `json:"isSearchMemberNickname"`
 	//offset, count int
-	Offset     int `json:"offset"`
-	Count      int `json:"count"`
-	PageNumber int `json:"pageNumber"`
+	Offset int `json:"offset"`
+	Count  int `json:"count"`
 }
 
 type SearchGroupMembersCallback []*model_struct.LocalGroupMember

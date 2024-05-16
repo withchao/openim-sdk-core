@@ -46,6 +46,7 @@ const (
 	SetFriendRemark                 = "/friend/set_friend_remark"
 	UpdateFriends                   = "/friend/update_friends"
 	GetFriendHash                   = "/friend/friend_hash"
+	SearchFriends                   = "/friend/search_friend"
 
 	AddBlackRouter     = "/friend/add_black"
 	RemoveBlackRouter  = "/friend/remove_black"

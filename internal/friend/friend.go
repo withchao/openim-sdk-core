@@ -31,7 +31,7 @@ import (
 )
 
 func NewFriend(loginUserID string, db db_interface.DataBase, user *user.User, conversationCh chan common.Cmd2Value) *Friend {
-	f := &Friend{loginUserID: loginUserID, db: db, user: user, conversationCh: conversationCh}
+	f := &Friend{loginUserID: loginUserID, db: db, user: user, conversationCh: conversationCh, friendNum: -1}
 	f.initSyncer()
 	return f
 }
@@ -47,6 +47,7 @@ type Friend struct {
 	requestSendSyncer  *syncer.Syncer[*model_struct.LocalFriendRequest, [2]string]
 	conversationCh     chan common.Cmd2Value
 	listenerForService open_im_sdk_callback.OnListenerForService
+	friendNum          int64
 }
 
 func (f *Friend) initSyncer() {
@@ -220,7 +221,7 @@ func (f *Friend) doNotification(ctx context.Context, msg *sdkws.MsgData) error {
 		}
 		if tips.FromToUserID != nil {
 			if tips.FromToUserID.FromUserID == f.loginUserID {
-				return f.deleteFriend(ctx, tips.FromToUserID.ToUserID)
+				return f.deleteLocalFriend(ctx, []string{tips.FromToUserID.ToUserID})
 			}
 		}
 	case constant.FriendRemarkSetNotification:

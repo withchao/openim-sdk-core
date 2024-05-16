@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"github.com/openimsdk/openim-sdk-core/v3/pkg/ccontext"
 	"github.com/openimsdk/openim-sdk-core/v3/pkg/sdkerrs"
+	pconstant "github.com/openimsdk/protocol/constant"
+	"github.com/openimsdk/tools/db/pagination"
 	"io"
 	"net/http"
 	"time"
@@ -173,4 +175,8 @@ func GetPageAll[A interface {
 		}
 	}
 	return res, nil
+}
+
+func LocalQuery(pagination pagination.Pagination) bool {
+	return pagination.GetPageNumber()*pagination.GetShowNumber() > pconstant.MaxSyncPullNumber
 }

@@ -32,8 +32,8 @@ func Test_ChangeInputState(t *testing.T) {
 }
 
 func Test_Empty(t *testing.T) {
-	for {
-		time.Sleep(time.Second * 1)
+	if err := open_im_sdk.UserForSDK.Friend().SyncFriendPart(ctx); err != nil {
+		panic(err)
 	}
 }
 

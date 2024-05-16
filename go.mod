@@ -20,7 +20,7 @@ require golang.org/x/net v0.22.0
 require (
 	github.com/google/go-cmp v0.6.0
 	github.com/openimsdk/protocol v0.0.66
-	github.com/openimsdk/tools v0.0.49-alpha.9
+	github.com/openimsdk/tools v0.0.49-alpha.20
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	go.etcd.io/etcd/api/v3 v3.5.13
 	golang.org/x/image v0.15.0
@@ -41,3 +41,5 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240318140521-94a12d6c2237 // indirect
 	google.golang.org/grpc v1.62.1 // indirect
 )
+
+replace github.com/openimsdk/protocol => /Users/chao/Desktop/withchao/protocol
