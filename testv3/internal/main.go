@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"fmt"
 	"github.com/openimsdk/openim-sdk-core/v3/internal/util"
 	"github.com/openimsdk/openim-sdk-core/v3/open_im_sdk"
 	"github.com/openimsdk/openim-sdk-core/v3/pkg/ccontext"
@@ -9,6 +10,7 @@ import (
 	"github.com/openimsdk/openim-sdk-core/v3/pkg/utils"
 	"github.com/openimsdk/openim-sdk-core/v3/sdk_struct"
 	"github.com/openimsdk/openim-sdk-core/v3/testv3/internal/listener"
+	"github.com/openimsdk/openim-sdk-core/v3/testv3/internal/message"
 	"github.com/openimsdk/openim-sdk-core/v3/version"
 	"github.com/openimsdk/protocol/auth"
 	"github.com/openimsdk/protocol/group"
@@ -45,7 +47,7 @@ func GetGroupMemberUserIDs(ctx context.Context, groupID string) ([]string, error
 	return resp.UserIDs, nil
 }
 
-func NewUser(userID string, config *Config) (*open_im_sdk.LoginMgr, error) {
+func NewUser(userID string, config *Config, msg chan<- message.Message) (*open_im_sdk.LoginMgr, error) {
 	userForSDK := open_im_sdk.NewLoginMgr()
 	conf := sdk_struct.IMConfig{
 		ApiAddr:              config.ApiAddr,
@@ -67,9 +69,12 @@ func NewUser(userID string, config *Config) (*open_im_sdk.LoginMgr, error) {
 	}
 	userForSDK.SetConversationListener(&listener.ConversationListener{Ctx: ctx, UserID: userID})
 	userForSDK.SetGroupListener(&listener.GroupListener{Ctx: ctx, UserID: userID})
-	userForSDK.SetAdvancedMsgListener(&listener.AdvancedMsgListener{Ctx: ctx, UserID: userID})
+	userForSDK.SetAdvancedMsgListener(&listener.AdvancedMsgListener{Ctx: ctx, UserID: userID, Ch: msg})
 	userForSDK.SetFriendListener(&listener.FriendListener{Ctx: ctx, UserID: userID})
 	userForSDK.SetUserListener(&listener.UserListener{Ctx: ctx, UserID: userID})
-
+	if err := userForSDK.User().SyncLoginUserInfo(ctx); err != nil {
+		return nil, err
+	}
+	fmt.Println("user success", userID)
 	return userForSDK, nil
 }

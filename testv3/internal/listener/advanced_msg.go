@@ -2,16 +2,18 @@ package listener
 
 import (
 	"context"
-	"github.com/openimsdk/tools/log"
+	"github.com/openimsdk/openim-sdk-core/v3/testv3/internal/message"
 )
 
 type AdvancedMsgListener struct {
 	Ctx    context.Context
 	UserID string
+	Ch     chan<- message.Message
 }
 
-func (l *AdvancedMsgListener) OnRecvNewMessage(message string) {
-	log.ZDebug(l.Ctx, "OnRecvNewMessage", "message", message)
+func (l *AdvancedMsgListener) OnRecvNewMessage(msg string) {
+	l.Ch <- message.Message{UserID: l.UserID, Data: msg}
+	//log.ZDebug(l.Ctx, "OnRecvNewMessage", "message", message)
 }
 
 func (l *AdvancedMsgListener) OnRecvC2CReadReceipt(msgReceiptList string) {
