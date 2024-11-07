@@ -2,14 +2,14 @@ package db
 
 import (
 	"context"
-
-	"github.com/openimsdk/tools/errs"
 )
 
 func (d *DataBase) GetExistTables(ctx context.Context) ([]string, error) {
 	d.mRWMutex.RLock()
 	defer d.mRWMutex.RUnlock()
-	var tables []string
-	return tables, errs.Wrap(d.conn.WithContext(ctx).Raw("SELECT name FROM sqlite_master WHERE type='table'").Scan(&tables).Error)
-
+	tables, err := d.conn.WithContext(ctx).Migrator().GetTables()
+	if err != nil {
+		return nil, err
+	}
+	return tables, nil
 }

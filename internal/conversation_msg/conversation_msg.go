@@ -622,20 +622,6 @@ func (c *Conversation) msgStructToLocalErrChatLog(m *sdk_struct.MsgStruct) *mode
 	return &lc
 }
 
-func (c *Conversation) tempCacheChatLog(ctx context.Context, messageList []*sdk_struct.MsgStruct) {
-	var newMessageList []*model_struct.TempCacheLocalChatLog
-	copier.Copy(&newMessageList, &messageList)
-	if err := c.db.BatchInsertTempCacheMessageList(ctx, newMessageList); err != nil {
-		// log.Error("", "BatchInsertTempCacheMessageList detail err:", err.Error(), len(newMessageList))
-		for _, v := range newMessageList {
-			err := c.db.InsertTempCacheMessage(ctx, v)
-			if err != nil {
-				log.ZWarn(ctx, "InsertTempCacheMessage operation", err, "chat err log: ", *v)
-			}
-		}
-	}
-}
-
 func (c *Conversation) batchUpdateMessageList(ctx context.Context, updateMsg map[string][]*model_struct.LocalChatLog) error {
 	if updateMsg == nil {
 		return nil

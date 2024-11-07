@@ -7,6 +7,48 @@ import (
 	"time"
 )
 
+const (
+	FieldTypeInt2 = 21 // smallint
+	FieldTypeInt4 = 23 // integer
+	FieldTypeInt8 = 20 // bigint
+
+	FieldTypeFloat4  = 700  // real
+	FieldTypeFloat8  = 701  // double precision
+	FieldTypeNumeric = 1700 // numeric
+
+	FieldTypeChar    = 18   // char
+	FieldTypeVarchar = 1043 // varchar
+	FieldTypeText    = 25   // text
+	FieldTypeName    = 19   // name
+
+	FieldTypeBool = 16 // bool
+
+	FieldTypeDate        = 1082 // date
+	FieldTypeTime        = 1083 // time
+	FieldTypeTimestamp   = 1114 // timestamp
+	FieldTypeTimestamptz = 1184 // timestamp with time zone
+	FieldTypeInterval    = 1186 // interval
+
+	FieldTypePoint   = 600 // point
+	FieldTypeLine    = 628 // line
+	FieldTypeLseg    = 601 // lseg
+	FieldTypeBox     = 603 // box
+	FieldTypePath    = 602 // path
+	FieldTypePolygon = 604 // polygon
+	FieldTypeCircle  = 718 // circle
+
+	FieldTypeCIDR    = 650 // cidr
+	FieldTypeINET    = 869 // inet
+	FieldTypeMacAddr = 829 // macaddr
+
+	FieldTypeJSON  = 114  // json
+	FieldTypeJSONB = 3802 // jsonb
+
+	FieldTypeUUID = 2950 // uuid
+
+	FieldTypeInt4Array = 1007 // int4[]
+)
+
 type rawRows struct {
 	AffectedRows int              `json:"affectedRows"`
 	Fields       []Field          `json:"fields"`
@@ -71,7 +113,6 @@ func (r *rawRows) Next(dest []driver.Value) error {
 	r.index++
 	row := r.Rows[index]
 	for i, column := range r.columns {
-		//log.Println("rawRows.for====>", i, "/", column, ":", row[column], "->", printType(dest[i]))
 		val, err := r.toData(row, column)
 		if err != nil {
 			return err

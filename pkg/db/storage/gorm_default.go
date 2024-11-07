@@ -24,3 +24,9 @@ func OpenGorm(userID string, dbDir string, log logger.Interface) (*gorm.DB, erro
 	}
 	return db, nil
 }
+
+func GetTables(db *gorm.DB) ([]string, error) {
+
+	var tables []string
+	return tables, errs.Wrap(d.conn.WithContext(ctx).Raw("SELECT name FROM sqlite_master WHERE type='table'").Scan(&tables).Error)
+}

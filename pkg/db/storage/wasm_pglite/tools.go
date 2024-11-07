@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v5/pgconn"
-	"log"
 	"strconv"
 	"syscall/js"
 )
@@ -22,7 +21,6 @@ func waitAsyncFunc(ctx context.Context, result js.Value) (js.Value, error) {
 		done    = make(chan struct{})
 	)
 	success := js.FuncOf(func(this js.Value, args []js.Value) any {
-		log.Println("async js success", args)
 		resArgs = args
 		ok = true
 		close(done)
@@ -30,7 +28,6 @@ func waitAsyncFunc(ctx context.Context, result js.Value) (js.Value, error) {
 	})
 	defer success.Release()
 	failed := js.FuncOf(func(this js.Value, args []js.Value) any {
-		log.Println("async js error", args)
 		resArgs = args
 		close(done)
 		return nil

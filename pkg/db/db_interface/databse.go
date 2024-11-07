@@ -85,8 +85,6 @@ type MessageModel interface {
 	GetAbnormalMsgSeqList(ctx context.Context) ([]int64, error)
 	BatchInsertExceptionMsg(ctx context.Context, MessageList []*model_struct.LocalErrChatLog) error
 	GetConversationAbnormalMsgSeq(ctx context.Context, groupID string) (int64, error)
-	BatchInsertTempCacheMessageList(ctx context.Context, MessageList []*model_struct.TempCacheLocalChatLog) error
-	InsertTempCacheMessage(ctx context.Context, Message *model_struct.TempCacheLocalChatLog) error
 	DeleteConversationAllMessages(ctx context.Context, conversationID string) error
 	MarkDeleteConversationAllMessages(ctx context.Context, conversationID string) error
 
