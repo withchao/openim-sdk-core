@@ -17,7 +17,7 @@ package db
 import (
 	"context"
 	"errors"
-	"fmt"
+	"gorm.io/gorm"
 	"strings"
 
 	"github.com/openimsdk/openim-sdk-core/v3/pkg/constant"
@@ -33,52 +33,10 @@ func (d *DataBase) initChatLog(ctx context.Context, conversationID string) error
 	d.mRWMutex.Lock()
 	defer d.mRWMutex.Unlock()
 	tableName := utils.GetTableName(conversationID)
-	if !d.tableChecker.HasTable(tableName) {
-		createTableSQL := fmt.Sprintf(`
-            CREATE TABLE "%s" (
-                client_msg_id CHAR(64),
-                server_msg_id CHAR(64),
-                send_id CHAR(64),
-                recv_id CHAR(64),
-                sender_platform_id INTEGER,
-                sender_nick_name VARCHAR(255),
-                sender_face_url VARCHAR(255),
-                session_type INTEGER,
-                msg_from INTEGER,
-                content_type INTEGER,
-                content VARCHAR(1000),
-                is_read NUMERIC,
-                status INTEGER,
-                seq INTEGER DEFAULT 0,
-                send_time INTEGER,
-                create_time INTEGER,
-                attached_info VARCHAR(1024),
-                ex VARCHAR(1024),
-                local_ex VARCHAR(1024),
-                is_react NUMERIC,
-                is_external_extensions NUMERIC,
-                msg_first_modify_time INTEGER,
-                PRIMARY KEY (client_msg_id)
-            );`, tableName)
-
-		if result := d.conn.Exec(createTableSQL); result.Error != nil {
-			return errs.WrapMsg(result.Error, "Create table failed", "table", tableName)
-		}
-		result := d.conn.Exec(fmt.Sprintf("CREATE INDEX %s ON %s (seq)", "index_seq_"+conversationID, tableName))
-		if result.Error != nil {
-			return errs.WrapMsg(result.Error, "Create index_seq failed", "table", tableName, "index", "index_seq_"+conversationID)
-		}
-		result = d.conn.Exec(fmt.Sprintf("CREATE INDEX %s ON %s (send_time)", "index_send_time_"+conversationID, tableName))
-		if result.Error != nil {
-			return errs.WrapMsg(result.Error, "Create index_send_time failed", "table", tableName, "index", "index_send_time_"+conversationID)
-		}
-		d.tableChecker.UpdateTable(tableName)
+	if err := d.conn.Session(&gorm.Session{}).Table(tableName).Migrator().AutoMigrate(&model_struct.LocalChatLog{}); err != nil {
+		return errs.WrapMsg(err, "AutoMigrate failed", "table", tableName)
 	}
 	return nil
-}
-
-func (d *DataBase) checkTable(ctx context.Context, tableName string) bool {
-	return d.conn.Migrator().HasTable(tableName)
 }
 
 func (d *DataBase) UpdateMessage(ctx context.Context, conversationID string, c *model_struct.LocalChatLog) error {
