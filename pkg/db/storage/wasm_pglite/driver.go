@@ -3,16 +3,19 @@ package wasm_pglite
 import (
 	"context"
 	"database/sql/driver"
+	"log"
+	"strings"
 	"syscall/js"
 )
 
 type DriverContext struct{}
 
 func (d DriverContext) open(name string) (int, error) {
-	resp, err := call(context.Background(), "open", js.ValueOf(name))
+	resp, err := call(context.Background(), funcOpen, js.ValueOf(name))
 	if err != nil {
 		return 0, err
 	}
+	log.Println("#############open", resp.Type().String())
 	return resp.Int(), nil
 }
 
@@ -47,6 +50,7 @@ type Conn struct {
 func (c Conn) Prepare(query string) (driver.Stmt, error) {
 	stmt := &Stmt{id: c.id, query: query}
 	if query != autoMigrateSQL {
+		stmt.query = strings.ReplaceAll(stmt.query, "`", "'")
 		return stmt, nil
 	}
 	return pgliteAutoMigrateCustomStmt{
@@ -55,7 +59,7 @@ func (c Conn) Prepare(query string) (driver.Stmt, error) {
 }
 
 func (c Conn) Close() error {
-	_, err := call(context.Background(), "close", js.ValueOf(c.id))
+	_, err := call(context.Background(), funcClose, js.ValueOf(c.id))
 	return err
 }
 

@@ -20,7 +20,7 @@ const (
 	APIADDR = "http://127.0.0.1:10002"
 	WSADDR  = "ws://127.0.0.1:10001"
 
-	UserID  = "2237746339"
+	UserID = "7701565509"
 )
 
 const (

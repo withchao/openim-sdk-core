@@ -7,8 +7,15 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v5/pgconn"
+	"log"
 	"strconv"
 	"syscall/js"
+)
+
+const (
+	funcOpen  = "pgliteOpen"
+	funcClose = "pgliteClose"
+	funcQuery = "pgliteQuery"
 )
 
 func waitAsyncFunc(ctx context.Context, result js.Value) (js.Value, error) {
@@ -100,7 +107,9 @@ func jsError(value js.Value) (err error) {
 }
 
 func call(ctx context.Context, name string, args ...any) (js.Value, error) {
-	return waitAsyncFunc(ctx, js.Global().Get("gopglite").Call(name, args...))
+	log.Println("#############call", name, args)
+	//return waitAsyncFunc(ctx, js.Global().Get("gopglite").Call(name, args...))
+	return waitAsyncFunc(ctx, js.Global().Call(name, args...))
 }
 
 func query(ctx context.Context, id int, query string, args []driver.Value, resp any) error {
@@ -111,7 +120,7 @@ func query(ctx context.Context, id int, query string, args []driver.Value, resp 
 	if err != nil {
 		return err
 	}
-	data, err := call(ctx, "query", js.ValueOf(id), js.ValueOf(query), js.ValueOf(string(argsData)))
+	data, err := call(ctx, funcQuery, js.ValueOf(id), js.ValueOf(query), js.ValueOf(string(argsData)))
 	if err != nil {
 		return err
 	}
