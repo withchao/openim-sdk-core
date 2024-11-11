@@ -50,7 +50,7 @@ type Conn struct {
 func (c Conn) Prepare(query string) (driver.Stmt, error) {
 	stmt := &Stmt{id: c.id, query: query}
 	if query != autoMigrateSQL {
-		stmt.query = strings.ReplaceAll(stmt.query, "`", "'")
+		stmt.query = strings.ReplaceAll(stmt.query, "`", "")
 		return stmt, nil
 	}
 	return pgliteAutoMigrateCustomStmt{

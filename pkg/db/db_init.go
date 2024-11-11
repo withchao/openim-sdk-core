@@ -49,12 +49,25 @@ func (tc *TableChecker) UpdateTable(tableName string) {
 	tc.tableCache[tableName] = true
 }
 
+type RWMutex struct {
+	sync.Mutex
+}
+
+func (r *RWMutex) RLock() {
+	r.Mutex.Lock()
+}
+
+func (r *RWMutex) RUnlock() {
+	r.Mutex.Unlock()
+}
+
 type DataBase struct {
 	loginUserID  string
 	dbDir        string
 	conn         *gorm.DB
 	tableChecker *TableChecker
-	mRWMutex     sync.RWMutex
+	//mRWMutex     sync.RWMutex
+	mRWMutex RWMutex
 }
 
 func (d *DataBase) GetMultipleMessageReactionExtension(ctx context.Context, msgIDList []string) (result []*model_struct.LocalChatLogReactionExtensions, err error) {

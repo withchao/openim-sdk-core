@@ -44,7 +44,7 @@ func NewDataFetcher[T any](db db_interface.VersionSyncModel, tableName string, e
 func (ds *DataFetcher[T]) FetchWithPagination(ctx context.Context, offset, limit int) ([]T, error) {
 	versionInfo, err := ds.db.GetVersionSync(ctx, ds.TableName, ds.EntityID)
 	if err != nil {
-		return nil, err
+		return nil, errs.WrapMsg(err, "db GetVersionSync")
 	}
 
 	if offset > len(versionInfo.UIDList) {

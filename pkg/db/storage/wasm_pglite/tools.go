@@ -122,8 +122,10 @@ func query(ctx context.Context, id int, query string, args []driver.Value, resp 
 	}
 	data, err := call(ctx, funcQuery, js.ValueOf(id), js.ValueOf(query), js.ValueOf(string(argsData)))
 	if err != nil {
+		log.Println("#############query", "sql", query, "args", string(argsData), "error", err)
 		return err
 	}
+	log.Println("#############query", "sql", query, "args", string(argsData), "resp", data)
 	if resp != nil {
 		text := data.String()
 		if err := json.Unmarshal([]byte(text), resp); err != nil {

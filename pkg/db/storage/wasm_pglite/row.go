@@ -129,13 +129,13 @@ type Field struct {
 
 type baseExecResult struct {
 	ID       int64 `json:"lastInsertId"`
-	Affected int64 `json:"rowsAffected"`
+	Affected int64 `json:"affectedRows"`
 }
 
 func (r baseExecResult) RowsAffected() (int64, error) {
-	return r.ID, nil
+	return r.Affected, nil
 }
 
 func (r baseExecResult) LastInsertId() (int64, error) {
-	return r.Affected, nil
+	return r.ID, nil
 }

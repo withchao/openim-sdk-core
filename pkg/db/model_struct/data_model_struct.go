@@ -16,8 +16,8 @@ package model_struct
 
 import (
 	"database/sql/driver"
+	"encoding/base64"
 	"encoding/json"
-
 	"github.com/openimsdk/tools/errs"
 )
 
@@ -170,10 +170,10 @@ type LocalSeq struct {
 }
 
 type LocalChatLog struct {
-	ClientMsgID          string `gorm:"column:client_msg_id;primary_key;type:char(64)" json:"clientMsgID"`
-	ServerMsgID          string `gorm:"column:server_msg_id;type:char(64)" json:"serverMsgID"`
-	SendID               string `gorm:"column:send_id;type:char(64)" json:"sendID"`
-	RecvID               string `gorm:"column:recv_id;index;type:char(64)" json:"recvID"`
+	ClientMsgID          string `gorm:"column:client_msg_id;primary_key;type:varchar(64)" json:"clientMsgID"`
+	ServerMsgID          string `gorm:"column:server_msg_id;type:varchar(64)" json:"serverMsgID"`
+	SendID               string `gorm:"column:send_id;type:varchar(64)" json:"sendID"`
+	RecvID               string `gorm:"column:recv_id;index;type:varchar(64)" json:"recvID"`
 	SenderPlatformID     int32  `gorm:"column:sender_platform_id" json:"senderPlatformID"`
 	SenderNickname       string `gorm:"column:sender_nick_name;type:varchar(255)" json:"senderNickname"`
 	SenderFaceURL        string `gorm:"column:sender_face_url;type:varchar(255)" json:"senderFaceURL"`
@@ -196,10 +196,10 @@ type LocalChatLog struct {
 
 type LocalErrChatLog struct {
 	Seq              int64  `gorm:"column:seq;primary_key" json:"seq"`
-	ClientMsgID      string `gorm:"column:client_msg_id;type:char(64)" json:"clientMsgID"`
-	ServerMsgID      string `gorm:"column:server_msg_id;type:char(64)" json:"serverMsgID"`
-	SendID           string `gorm:"column:send_id;type:char(64)" json:"sendID"`
-	RecvID           string `gorm:"column:recv_id;type:char(64)" json:"recvID"`
+	ClientMsgID      string `gorm:"column:client_msg_id;type:varchar(64)" json:"clientMsgID"`
+	ServerMsgID      string `gorm:"column:server_msg_id;type:varchar(64)" json:"serverMsgID"`
+	SendID           string `gorm:"column:send_id;type:varchar(64)" json:"sendID"`
+	RecvID           string `gorm:"column:recv_id;type:varchar(64)" json:"recvID"`
 	SenderPlatformID int32  `gorm:"column:sender_platform_id" json:"senderPlatformID"`
 	SenderNickname   string `gorm:"column:sender_nick_name;type:varchar(255)" json:"senderNickname"`
 	SenderFaceURL    string `gorm:"column:sender_face_url;type:varchar(255)" json:"senderFaceURL"`
@@ -215,10 +215,10 @@ type LocalErrChatLog struct {
 	Ex               string `gorm:"column:ex;type:text" json:"ex"`
 }
 type TempCacheLocalChatLog struct {
-	ClientMsgID      string `gorm:"column:client_msg_id;primary_key;type:char(64)" json:"clientMsgID"`
-	ServerMsgID      string `gorm:"column:server_msg_id;type:char(64)" json:"serverMsgID"`
-	SendID           string `gorm:"column:send_id;type:char(64)" json:"sendID"`
-	RecvID           string `gorm:"column:recv_id;type:char(64)" json:"recvID"`
+	ClientMsgID      string `gorm:"column:client_msg_id;primary_key;type:varchar(64)" json:"clientMsgID"`
+	ServerMsgID      string `gorm:"column:server_msg_id;type:varchar(64)" json:"serverMsgID"`
+	SendID           string `gorm:"column:send_id;type:varchar(64)" json:"sendID"`
+	RecvID           string `gorm:"column:recv_id;type:varchar(64)" json:"recvID"`
 	SenderPlatformID int32  `gorm:"column:sender_platform_id" json:"senderPlatformID"`
 	SenderNickname   string `gorm:"column:sender_nick_name;type:varchar(255)" json:"senderNickname"`
 	SenderFaceURL    string `gorm:"column:sender_face_url;type:varchar(255)" json:"senderFaceURL"`
@@ -236,10 +236,10 @@ type TempCacheLocalChatLog struct {
 }
 
 type LocalConversation struct {
-	ConversationID        string `gorm:"column:conversation_id;primary_key;type:char(128)" json:"conversationID"`
+	ConversationID        string `gorm:"column:conversation_id;primary_key;type:varchar(128)" json:"conversationID"`
 	ConversationType      int32  `gorm:"column:conversation_type" json:"conversationType"`
-	UserID                string `gorm:"column:user_id;type:char(64)" json:"userID"`
-	GroupID               string `gorm:"column:group_id;type:char(128)" json:"groupID"`
+	UserID                string `gorm:"column:user_id;type:varchar(64)" json:"userID"`
+	GroupID               string `gorm:"column:group_id;type:varchar(128)" json:"groupID"`
 	ShowName              string `gorm:"column:show_name;type:varchar(255)" json:"showName"`
 	FaceURL               string `gorm:"column:face_url;type:varchar(255)" json:"faceURL"`
 	RecvMsgOpt            int32  `gorm:"column:recv_msg_opt" json:"recvMsgOpt"`
@@ -267,8 +267,8 @@ func (LocalConversation) TableName() string {
 }
 
 type LocalConversationUnreadMessage struct {
-	ConversationID string `gorm:"column:conversation_id;primary_key;type:char(128)" json:"conversationID"`
-	ClientMsgID    string `gorm:"column:client_msg_id;primary_key;type:char(64)" json:"clientMsgID"`
+	ConversationID string `gorm:"column:conversation_id;primary_key;type:varchar(128)" json:"conversationID"`
+	ClientMsgID    string `gorm:"column:client_msg_id;primary_key;type:varchar(64)" json:"clientMsgID"`
 	SendTime       int64  `gorm:"column:send_time" json:"sendTime"`
 	Ex             string `gorm:"column:ex;type:text" json:"ex"`
 }
@@ -278,7 +278,7 @@ type LocalAdminGroupRequest struct {
 }
 
 type LocalChatLogReactionExtensions struct {
-	ClientMsgID             string `gorm:"column:client_msg_id;primary_key;type:char(64)" json:"clientMsgID"`
+	ClientMsgID             string `gorm:"column:client_msg_id;primary_key;type:varchar(64)" json:"clientMsgID"`
 	LocalReactionExtensions []byte `gorm:"column:local_reaction_extensions" json:"localReactionExtensions"`
 }
 type LocalWorkMomentsNotification struct {
@@ -313,7 +313,7 @@ func (LocalWorkMomentsNotificationUnreadCount) TableName() string {
 }
 
 type NotificationSeqs struct {
-	ConversationID string `gorm:"column:conversation_id;primary_key;type:char(128)" json:"conversationID"`
+	ConversationID string `gorm:"column:conversation_id;primary_key;type:varchar(128)" json:"conversationID"`
 	Seq            int64  `gorm:"column:seq" json:"seq"`
 }
 
@@ -349,8 +349,8 @@ func (LocalStranger) TableName() string {
 }
 
 type LocalSendingMessages struct {
-	ConversationID string `gorm:"column:conversation_id;primary_key;type:char(128)" json:"conversationID"`
-	ClientMsgID    string `gorm:"column:client_msg_id;primary_key;type:char(64)" json:"clientMsgID"`
+	ConversationID string `gorm:"column:conversation_id;primary_key;type:varchar(128)" json:"conversationID"`
+	ClientMsgID    string `gorm:"column:client_msg_id;primary_key;type:varchar(64)" json:"clientMsgID"`
 	Ex             string `gorm:"column:ex;type:text" json:"ex"`
 }
 
@@ -359,7 +359,7 @@ func (LocalSendingMessages) TableName() string {
 }
 
 type LocalUserCommand struct {
-	UserID     string `gorm:"column:user_id;type:char(128);primary_key" json:"userID"`
+	UserID     string `gorm:"column:user_id;type:varchar(128);primary_key" json:"userID"`
 	Type       int32  `gorm:"column:type;primary_key" json:"type"`
 	Uuid       string `gorm:"column:uuid;type:varchar(255);primary_key" json:"uuid"`
 	CreateTime int64  `gorm:"column:create_time" json:"createTime"`
@@ -378,8 +378,17 @@ func (a StringArray) Value() (driver.Value, error) {
 }
 
 func (a *StringArray) Scan(value interface{}) error {
-	b, ok := value.([]byte)
-	if !ok {
+	var b []byte
+	switch v := value.(type) {
+	case []byte:
+		b = v
+	case string:
+		var err error
+		b, err = base64.StdEncoding.DecodeString(v)
+		if err != nil {
+			return err
+		}
+	default:
 		return errs.New("type assertion to []byte failed").Wrap()
 	}
 	return json.Unmarshal(b, &a)

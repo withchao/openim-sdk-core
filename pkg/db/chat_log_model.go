@@ -409,7 +409,7 @@ func (d *DataBase) GetConversationNormalMsgSeq(ctx context.Context, conversation
 	d.mRWMutex.RLock()
 	defer d.mRWMutex.RUnlock()
 	var seq int64
-	err = d.conn.WithContext(ctx).Table(utils.GetConversationTableName(conversationID)).Select("IFNULL(max(seq),0)").Find(&seq).Error
+	err = d.conn.WithContext(ctx).Table(utils.GetConversationTableName(conversationID)).Select("seq").Order("seq DESC").Find(&seq).Error
 	return seq, errs.WrapMsg(err, "GetConversationNormalMsgSeq")
 }
 
@@ -418,7 +418,7 @@ func (d *DataBase) CheckConversationNormalMsgSeq(ctx context.Context, conversati
 	d.mRWMutex.RLock()
 	defer d.mRWMutex.RUnlock()
 	if d.tableChecker.HasTable(utils.GetConversationTableName(conversationID)) {
-		err := d.conn.WithContext(ctx).Table(utils.GetConversationTableName(conversationID)).Select("IFNULL(max(seq),0)").Find(&seq).Error
+		err := d.conn.WithContext(ctx).Table(utils.GetConversationTableName(conversationID)).Select("max(seq)").Find(&seq).Error
 		return seq, errs.Wrap(err)
 	}
 	return 0, nil
@@ -428,7 +428,7 @@ func (d *DataBase) GetConversationPeerNormalMsgSeq(ctx context.Context, conversa
 	d.mRWMutex.RLock()
 	defer d.mRWMutex.RUnlock()
 	var seq int64
-	err := d.conn.WithContext(ctx).Table(utils.GetConversationTableName(conversationID)).Select("IFNULL(max(seq),0)").Where("send_id != ?", d.loginUserID).Find(&seq).Error
+	err := d.conn.WithContext(ctx).Table(utils.GetConversationTableName(conversationID)).Select("seq").Order("seq DESC").Where("send_id != ?", d.loginUserID).Find(&seq).Error
 	return seq, errs.WrapMsg(err, "GetConversationPeerNormalMsgSeq")
 }
 
