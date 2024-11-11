@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/openimsdk/openim-sdk-core/v3/pkg/db/storage"
 
 	"github.com/openimsdk/openim-sdk-core/v3/pkg/constant"
 	"github.com/openimsdk/openim-sdk-core/v3/pkg/db/model_struct"
@@ -33,6 +34,19 @@ const (
 	batchSize = 200
 )
 
+var conversationOrder string
+
+func init() {
+	switch name := storage.DBName; name {
+	case storage.SQLite:
+		conversationOrder = "is_pinned DESC, MAX(latest_msg_send_time,draft_text_time) DESC"
+	case storage.PGLite:
+		conversationOrder = "is_pinned DESC, GREATEST(latest_msg_send_time,draft_text_time) DESC"
+	default:
+		panic(fmt.Sprintf("unknown db name %s", name))
+	}
+}
+
 func (d *DataBase) GetConversationByUserID(ctx context.Context, userID string) (*model_struct.LocalConversation, error) {
 	d.mRWMutex.RLock()
 	defer d.mRWMutex.RUnlock()
@@ -46,7 +60,7 @@ func (d *DataBase) GetAllConversationListDB(ctx context.Context) ([]*model_struc
 	defer d.mRWMutex.RUnlock()
 	var conversationList []*model_struct.LocalConversation
 	//err := errs.WrapMsg(d.conn.WithContext(ctx).Where("latest_msg_send_time > ?", 0).Order("case when is_pinned=1 then 0 else 1 end,max(latest_msg_send_time,draft_text_time) DESC").Find(&conversationList).Error,
-	err := errs.WrapMsg(d.conn.WithContext(ctx).Where("latest_msg_send_time > ?", 0).Order("is_pinned, latest_msg_send_time DESC").Find(&conversationList).Error,
+	err := errs.WrapMsg(d.conn.WithContext(ctx).Where("latest_msg_send_time > ?", 0).Order(conversationOrder).Find(&conversationList).Error,
 		"GetAllConversationList failed")
 	if err != nil {
 		return nil, err
@@ -99,7 +113,7 @@ func (d *DataBase) GetConversationListSplitDB(ctx context.Context, offset, count
 	d.mRWMutex.RLock()
 	defer d.mRWMutex.RUnlock()
 	var conversationList []*model_struct.LocalConversation
-	return conversationList, errs.Wrap(d.conn.WithContext(ctx).Where("latest_msg_send_time > ?", 0).Order("is_pinned, latest_msg_send_time DESC").Offset(offset).Limit(count).Find(&conversationList).Error)
+	return conversationList, errs.Wrap(d.conn.WithContext(ctx).Where("latest_msg_send_time > ?", 0).Order(conversationOrder).Offset(offset).Limit(count).Find(&conversationList).Error)
 	//return conversationList, errs.Wrap(d.conn.WithContext(ctx).Where("latest_msg_send_time > ?", 0).Order("case when is_pinned=1 then 0 else 1 end,max(latest_msg_send_time,draft_text_time) DESC").Offset(offset).Limit(count).Find(&conversationList).Error)
 }
 

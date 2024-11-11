@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 )
 
+const DBName = SQLite
+
 func OpenGorm(userID string, dbDir string, log logger.Interface) (*gorm.DB, error) {
 	path := filepath.Join(dbDir, fmt.Sprintf("OpenIM_%s_%s.db", constant.BigVersion, userID))
 	path, err := filepath.Abs(path)

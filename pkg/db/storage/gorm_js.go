@@ -13,6 +13,8 @@ import (
 	"gorm.io/gorm/logger"
 )
 
+const DBName = PGLite
+
 const wasmPGLite = "wasm_pglite"
 
 func init() {
@@ -33,26 +35,5 @@ func OpenGorm(userID string, _ string, log logger.Interface) (*gorm.DB, error) {
 		return nil, errs.WrapMsg(err, "open db failed")
 	}
 	db = db.Debug()
-	//conn, err := db.DB()
-	//if err != nil {
-	//	return nil, err
-	//}
-	//conn.SetMaxOpenConns(1)
-	//conn.SetMaxIdleConns(1)
-
-	//if err := db.AutoMigrate(&UserTest{}); err != nil {
-	//	return nil, err
-	//}
-	//if err := db.Create(&UserTest{ID: strconv.Itoa(int(time.Now().Unix())), Name: "test", Age: 10, Text: "hello world!", CreateTime: time.Now()}).Error; err != nil {
-	//	return nil, err
-	//}
 	return db, nil
 }
-
-//type UserTest struct {
-//	ID         string    `gorm:"column:id"`
-//	Name       string    `gorm:"column:name;type:varchar(255)"`
-//	Age        int       `gorm:"column:age"`
-//	Text       string    `gorm:"column:text"`
-//	CreateTime time.Time `gorm:"column:create_time"`
-//}
