@@ -18,8 +18,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/openimsdk/openim-sdk-core/v3/pkg/db/storage"
-
 	"github.com/openimsdk/openim-sdk-core/v3/pkg/constant"
 	"github.com/openimsdk/openim-sdk-core/v3/pkg/db/model_struct"
 	"github.com/openimsdk/openim-sdk-core/v3/pkg/utils"
@@ -30,22 +28,9 @@ import (
 	"github.com/openimsdk/tools/log"
 )
 
-const (
-	batchSize = 200
-)
+const batchSize = 200
 
-var conversationOrder string
-
-func init() {
-	switch name := storage.DBName; name {
-	case storage.SQLite:
-		conversationOrder = "is_pinned DESC, MAX(latest_msg_send_time,draft_text_time) DESC"
-	case storage.PGLite:
-		conversationOrder = "is_pinned DESC, GREATEST(latest_msg_send_time,draft_text_time) DESC"
-	default:
-		panic(fmt.Sprintf("unknown db name %s", name))
-	}
-}
+const conversationOrder = "is_pinned DESC, MAX(latest_msg_send_time,draft_text_time) DESC"
 
 func (d *DataBase) GetConversationByUserID(ctx context.Context, userID string) (*model_struct.LocalConversation, error) {
 	d.mRWMutex.RLock()
@@ -59,7 +44,6 @@ func (d *DataBase) GetAllConversationListDB(ctx context.Context) ([]*model_struc
 	d.mRWMutex.RLock()
 	defer d.mRWMutex.RUnlock()
 	var conversationList []*model_struct.LocalConversation
-	//err := errs.WrapMsg(d.conn.WithContext(ctx).Where("latest_msg_send_time > ?", 0).Order("case when is_pinned=1 then 0 else 1 end,max(latest_msg_send_time,draft_text_time) DESC").Find(&conversationList).Error,
 	err := errs.WrapMsg(d.conn.WithContext(ctx).Where("latest_msg_send_time > ?", 0).Order(conversationOrder).Find(&conversationList).Error,
 		"GetAllConversationList failed")
 	if err != nil {
@@ -114,7 +98,6 @@ func (d *DataBase) GetConversationListSplitDB(ctx context.Context, offset, count
 	defer d.mRWMutex.RUnlock()
 	var conversationList []*model_struct.LocalConversation
 	return conversationList, errs.Wrap(d.conn.WithContext(ctx).Where("latest_msg_send_time > ?", 0).Order(conversationOrder).Offset(offset).Limit(count).Find(&conversationList).Error)
-	//return conversationList, errs.Wrap(d.conn.WithContext(ctx).Where("latest_msg_send_time > ?", 0).Order("case when is_pinned=1 then 0 else 1 end,max(latest_msg_send_time,draft_text_time) DESC").Offset(offset).Limit(count).Find(&conversationList).Error)
 }
 
 func (d *DataBase) BatchInsertConversationList(ctx context.Context, conversationList []*model_struct.LocalConversation) error {
@@ -125,18 +108,9 @@ func (d *DataBase) BatchInsertConversationList(ctx context.Context, conversation
 	d.mRWMutex.Lock()
 	defer d.mRWMutex.Unlock()
 
-	for i := 0; i < len(conversationList); i += batchSize {
-		end := i + batchSize
-		if end > len(conversationList) {
-			end = len(conversationList)
-		}
-
-		batch := conversationList[i:end]
-		if err := d.conn.WithContext(ctx).Create(batch).Error; err != nil {
-			return errs.WrapMsg(err, "BatchInsertConversationList failed")
-		}
+	if err := d.conn.WithContext(ctx).Create(conversationList).Error; err != nil {
+		return errs.WrapMsg(err, "BatchInsertConversationList failed")
 	}
-
 	return nil
 }
 

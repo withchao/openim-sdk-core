@@ -6,30 +6,28 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/openimsdk/openim-sdk-core/v3/pkg/constant"
-	"github.com/openimsdk/openim-sdk-core/v3/pkg/db/storage/wasm_pglite"
+	"github.com/openimsdk/openim-sdk-core/v3/pkg/db/storage/wasm_sqlite"
 	"github.com/openimsdk/tools/errs"
-	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
-const DBName = PGLite
-
-const wasmPGLite = "wasm_pglite"
+const wasmSQLite = "wasm_sqlite"
 
 func init() {
-	sql.Register(wasmPGLite, &wasm_pglite.DriverContext{})
+	sql.Register(wasmSQLite, &wasm_sqlite.DriverContext{})
 }
 
 func OpenGorm(userID string, _ string, log logger.Interface) (*gorm.DB, error) {
 	log = nil
-	db, err := gorm.Open(postgres.New(postgres.Config{
+	db, err := gorm.Open(sqlite.Dialector{
 		DSN:        fmt.Sprintf("OpenIM_%s_%s.db", constant.BigVersion, userID),
-		DriverName: wasmPGLite,
-	}), &gorm.Config{
-		//Logger:                 log,
+		DriverName: wasmSQLite,
+	}, &gorm.Config{
+		Logger:                 log,
 		SkipDefaultTransaction: true,
-		CreateBatchSize:        1,
+		CreateBatchSize:        100,
 	})
 	if err != nil {
 		return nil, errs.WrapMsg(err, "open db failed")

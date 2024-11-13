@@ -49,25 +49,12 @@ func (tc *TableChecker) UpdateTable(tableName string) {
 	tc.tableCache[tableName] = true
 }
 
-type RWMutex struct {
-	sync.Mutex
-}
-
-func (r *RWMutex) RLock() {
-	r.Mutex.Lock()
-}
-
-func (r *RWMutex) RUnlock() {
-	r.Mutex.Unlock()
-}
-
 type DataBase struct {
 	loginUserID  string
 	dbDir        string
 	conn         *gorm.DB
 	tableChecker *TableChecker
-	//mRWMutex     sync.RWMutex
-	mRWMutex RWMutex
+	mRWMutex     sync.RWMutex
 }
 
 func (d *DataBase) GetMultipleMessageReactionExtension(ctx context.Context, msgIDList []string) (result []*model_struct.LocalChatLogReactionExtensions, err error) {
@@ -140,20 +127,16 @@ func (d *DataBase) initDB(ctx context.Context, logLevel int) error {
 	}
 
 	log.ZDebug(ctx, "open db success")
-	sqlDB, err := db.DB()
-	if err != nil {
-		return errs.WrapMsg(err, "get sql db failed")
-	}
-
-	sqlDB.SetConnMaxLifetime(time.Hour * 1)
-	sqlDB.SetMaxOpenConns(3)
-	sqlDB.SetMaxIdleConns(2)
-	sqlDB.SetConnMaxIdleTime(time.Minute * 10)
+	//sqlDB, err := db.DB()
+	//if err != nil {
+	//	return errs.WrapMsg(err, "get sql db failed")
+	//}
+	//
+	//sqlDB.SetConnMaxLifetime(time.Hour * 1)
+	//sqlDB.SetMaxOpenConns(3)
+	//sqlDB.SetMaxIdleConns(2)
+	//sqlDB.SetConnMaxIdleTime(time.Minute * 10)
 	d.conn = db
-
-	if err = db.AutoMigrate(&model_struct.LocalAppSDKVersion{}); err != nil {
-		log.ZWarn(ctx, "AutoMigrate LocalAppSDKVersion failed", err)
-	}
 
 	if err = d.versionDataMigrate(ctx); err != nil {
 		return err
@@ -163,10 +146,12 @@ func (d *DataBase) initDB(ctx context.Context, logLevel int) error {
 }
 
 func (d *DataBase) versionDataMigrate(ctx context.Context) error {
+	if err := d.conn.AutoMigrate(&model_struct.LocalAppSDKVersion{}); err != nil {
+		return err
+	}
 	verModel, err := d.GetAppSDKVersion(ctx)
 	if errs.Unwrap(err) == errs.ErrRecordNotFound {
 		err = d.conn.AutoMigrate(
-			&model_struct.LocalAppSDKVersion{},
 			&model_struct.LocalFriend{},
 			&model_struct.LocalFriendRequest{},
 			&model_struct.LocalGroup{},

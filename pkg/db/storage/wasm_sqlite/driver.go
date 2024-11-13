@@ -1,10 +1,8 @@
-package wasm_pglite
+package wasm_sqlite
 
 import (
 	"context"
 	"database/sql/driver"
-	"log"
-	"strings"
 	"syscall/js"
 )
 
@@ -15,7 +13,6 @@ func (d DriverContext) open(name string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	log.Println("#############open", resp.Type().String())
 	return resp.Int(), nil
 }
 
@@ -48,14 +45,7 @@ type Conn struct {
 }
 
 func (c Conn) Prepare(query string) (driver.Stmt, error) {
-	stmt := &Stmt{id: c.id, query: query}
-	if query != autoMigrateSQL {
-		stmt.query = strings.ReplaceAll(stmt.query, "`", "")
-		return stmt, nil
-	}
-	return pgliteAutoMigrateCustomStmt{
-		Stmt: stmt,
-	}, nil
+	return &Stmt{id: c.id, query: query}, nil
 }
 
 func (c Conn) Close() error {
@@ -64,7 +54,7 @@ func (c Conn) Close() error {
 }
 
 func (c Conn) Begin() (driver.Tx, error) {
-	if err := query(context.Background(), c.id, "BEGIN", nil, nil); err != nil {
+	if err := query(context.Background(), c.id, funcExec, "BEGIN", nil, nil); err != nil {
 		return nil, err
 	}
 	return &Tx{id: c.id}, nil
