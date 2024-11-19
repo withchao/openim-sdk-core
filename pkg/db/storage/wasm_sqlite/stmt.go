@@ -6,6 +6,7 @@ import (
 )
 
 type Stmt struct {
+	ctx   context.Context
 	id    int
 	query string
 }
@@ -16,7 +17,7 @@ func (s *Stmt) Close() error {
 
 func (s *Stmt) Exec(args []driver.Value) (driver.Result, error) {
 	var affected int64
-	if err := query(context.Background(), s.id, funcExec, s.query, args, &affected); err != nil {
+	if err := query(s.ctx, s.id, funcExec, s.query, args, &affected); err != nil {
 		return nil, err
 	}
 	return &baseExecResult{Affected: affected}, nil
@@ -24,7 +25,7 @@ func (s *Stmt) Exec(args []driver.Value) (driver.Result, error) {
 
 func (s *Stmt) Query(args []driver.Value) (driver.Rows, error) {
 	var res []rawRows
-	if err := query(context.Background(), s.id, funcQuery, s.query, args, &res); err != nil {
+	if err := query(s.ctx, s.id, funcQuery, s.query, args, &res); err != nil {
 		return nil, err
 	}
 	if len(res) == 0 {

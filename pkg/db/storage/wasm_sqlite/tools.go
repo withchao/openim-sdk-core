@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/openimsdk/tools/log"
+	"log"
 	"syscall/js"
 )
 
@@ -54,6 +54,7 @@ func waitAsyncFunc(ctx context.Context, result js.Value) (js.Value, error) {
 
 func jsError(value js.Value) error {
 	msg := value.Call("toString").String()
+	log.Println("====>", msg)
 	return fmt.Errorf("wasm return %w", errors.New(msg))
 }
 
@@ -74,7 +75,7 @@ func query(ctx context.Context, id int, name string, query string, args []driver
 		return err
 	}
 	text := data.String()
-	log.ZDebug(context.Background(), "qid", id, "fname", name, "sql", query, "args", string(argsData), "resp", text)
+	log.Println("#############query", "ctx", ctx.Value("ctx_test"), "sql", query, "args", string(argsData), "resp", text)
 	if resp != nil {
 		decoder := json.NewDecoder(bytes.NewReader([]byte(text)))
 		decoder.UseNumber()

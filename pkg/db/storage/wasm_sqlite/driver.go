@@ -6,10 +6,12 @@ import (
 	"syscall/js"
 )
 
-type DriverContext struct{}
+type DriverContext struct {
+	ctx context.Context
+}
 
 func (d DriverContext) open(name string) (int, error) {
-	resp, err := call(context.Background(), funcOpen, js.ValueOf(name))
+	resp, err := call(d.ctx, funcOpen, js.ValueOf(name))
 	if err != nil {
 		return 0, err
 	}
@@ -21,7 +23,7 @@ func (d DriverContext) Open(name string) (driver.Conn, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Conn{id: id}, nil
+	return &Conn{ctx: d.ctx, id: id}, nil
 }
 
 func (d DriverContext) OpenConnector(name string) (driver.Connector, error) {
@@ -33,7 +35,7 @@ type Connector struct {
 }
 
 func (c Connector) Connect(ctx context.Context) (driver.Conn, error) {
-	return (DriverContext{}).Open(c.name)
+	return (DriverContext{ctx: ctx}).Open(c.name)
 }
 
 func (c Connector) Driver() driver.Driver {
@@ -41,21 +43,22 @@ func (c Connector) Driver() driver.Driver {
 }
 
 type Conn struct {
-	id int
+	ctx context.Context
+	id  int
 }
 
 func (c Conn) Prepare(query string) (driver.Stmt, error) {
-	return &Stmt{id: c.id, query: query}, nil
+	return &Stmt{ctx: c.ctx, id: c.id, query: query}, nil
 }
 
 func (c Conn) Close() error {
-	_, err := call(context.Background(), funcClose, js.ValueOf(c.id))
+	_, err := call(c.ctx, funcClose, js.ValueOf(c.id))
 	return err
 }
 
 func (c Conn) Begin() (driver.Tx, error) {
-	if err := query(context.Background(), c.id, funcExec, "BEGIN", nil, nil); err != nil {
+	if err := query(c.ctx, c.id, funcExec, "BEGIN", nil, nil); err != nil {
 		return nil, err
 	}
-	return &Tx{id: c.id}, nil
+	return &Tx{ctx: c.ctx, id: c.id}, nil
 }
