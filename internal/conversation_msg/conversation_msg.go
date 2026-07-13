@@ -75,8 +75,9 @@ type Conversation struct {
 
 	typing *typing
 
-	sender     *messageSender
-	senderOnce sync.Once
+	sender        *messageSender
+	senderOnce    sync.Once
+	streamHandler *streamHandler
 }
 
 func (c *Conversation) ConversationEventQueue() chan common.Cmd2Value {
@@ -132,6 +133,7 @@ func NewConversation(
 		progress:                    0,
 	}
 	n.typing = newTyping(n)
+	n.streamHandler = newStreamHandler(n)
 	n.initSyncer()
 	n.cache = cache.NewCache[string, *model_struct.LocalConversation]()
 	return n
