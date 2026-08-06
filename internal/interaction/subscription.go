@@ -110,7 +110,7 @@ func (s *subscription) setUserState(changes []*sdkws.SubUserOnlineStatusElem) ma
 		}
 		if status, ok := s.load[v.UserID]; ok {
 			delete(s.unsub, v.UserID)
-			if equal(status.online, v.OnlinePlatformIDs) {
+			if !equal(status.online, v.OnlinePlatformIDs) {
 				change[v.UserID] = v.OnlinePlatformIDs
 			}
 			status.finish(v.OnlinePlatformIDs, nil)
