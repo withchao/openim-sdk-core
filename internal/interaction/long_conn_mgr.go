@@ -30,6 +30,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
+
 	"github.com/openimsdk/tools/mcontext"
 
 	"github.com/openimsdk/openim-sdk-core/v3/open_im_sdk_callback"
@@ -192,7 +193,7 @@ func (c *LongConnMgr) SendReqWaitResp(ctx context.Context, m proto.Message, reqI
 			return errs.NewCodeError(v.ErrCode, v.ErrMsg)
 		}
 		if err := proto.Unmarshal(v.Data, resp); err != nil {
-			return sdkerrs.ErrArgs
+			return sdkerrs.ErrArgs.WrapMsg(err.Error())
 		}
 		return nil
 	}
@@ -242,7 +243,7 @@ func (c *LongConnMgr) readPump(ctx context.Context) {
 		_ = c.conn.SetReadDeadline(pongWait)
 		messageType, message, err := c.conn.ReadMessage()
 		if err != nil {
-			log.ZError(c.ctx, "readMessage err", err, "goroutine ID:", getGoroutineID())
+			log.ZError(c.ctx, "readMessage err", err, "goroutine ID:", getGoroutineID(), "addr", c.conn.LocalAddr())
 			_ = c.close()
 			c.sub.onConnClosed(err)
 			continue
@@ -796,14 +797,20 @@ func (c *LongConnMgr) reConn(ctx context.Context, num *int) (needRecon bool, err
 	defer c.connWrite.Unlock()
 	c.listener.OnConnecting()
 	c.SetConnectionStatus(Connecting)
-	url := fmt.Sprintf("%s?sendID=%s&token=%s&platformID=%d&operationID=%s&isBackground=%t",
-		ccontext.Info(ctx).WsAddr(), ccontext.Info(ctx).UserID(), ccontext.Info(ctx).Token(),
-		ccontext.Info(ctx).PlatformID(), ccontext.Info(ctx).OperationID(), c.GetBackground())
-	if c.IsCompression {
-		url += fmt.Sprintf("&compression=%s", "gzip")
+	info := ccontext.Info(ctx)
+	req := map[string]any{
+		"userID":                 info.UserID(),
+		"token":                  info.Token(),
+		"platformID":             info.PlatformID(),
+		"operationID":            info.OperationID(),
+		"background":             c.GetBackground(),
+		"groupNotificationPrune": true,
 	}
-	log.ZDebug(ctx, "conn start", "url", url)
-	resp, err := c.conn.Dial(url, nil)
+	if c.IsCompression {
+		req["compression"] = "gzip"
+	}
+	log.ZDebug(ctx, "conn start", "url", info.WsAddr(), "req", req)
+	resp, err := c.conn.Dial(info.WsAddr(), req)
 	if err != nil {
 		c.SetConnectionStatus(Closed)
 		if resp != nil {
@@ -839,18 +846,22 @@ func (c *LongConnMgr) reConn(ctx context.Context, num *int) (needRecon bool, err
 		c.listener.OnConnectFailed(sdkerrs.NetworkError, err.Error())
 		return true, err
 	}
+	// Dial has completed successfully. Mark the connection as connected before
+	// sending the initial online-status subscription; the write path requires
+	// this state and otherwise rejects the first frame during reconnect.
+	c.SetConnectionStatus(Connected)
 	if err := c.writeConnFirstSubMsg(ctx); err != nil {
 		log.ZError(ctx, "first write user online sub info error", err)
 		ccontext.GetApiErrCodeCallback(ctx).OnError(ctx, err)
 		c.listener.OnConnectFailed(sdkerrs.NetworkError, err.Error())
-		c.conn.Close()
+		c.closedErr = err
+		_ = c.close()
 		return true, err
 	}
 	c.listener.OnConnectSuccess()
 	c.sub.onConnSuccess()
 	c.ctx = newContext(c.conn.LocalAddr())
 	c.ctx = context.WithValue(ctx, "ConnContext", c.ctx)
-	c.SetConnectionStatus(Connected)
 	c.conn.SetPongHandler(c.pongHandler)
 	c.conn.SetPingHandler(c.pingHandler)
 	*num++
