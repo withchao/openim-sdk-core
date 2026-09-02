@@ -20,11 +20,11 @@ package interaction
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/coder/websocket"
@@ -181,14 +181,15 @@ func (w *JSWebSocket) ReadMessage() (int, []byte, error) {
 	}
 }
 
-func (w *JSWebSocket) dial(ctx context.Context, urlStr string, req map[string]any) (*websocket.Conn, *http.Response, error) {
-	req["sendResponse"] = true
-	reqData, err := json.Marshal(req)
+func (w *JSWebSocket) dial(ctx context.Context, urlStr string) (*websocket.Conn, *http.Response, error) {
+	u, err := url.Parse(urlStr)
 	if err != nil {
 		return nil, nil, err
 	}
-	rawURL := fmt.Sprintf("%s?v=%s", urlStr, base64.RawURLEncoding.EncodeToString(reqData))
-	conn, httpResp, err := websocket.Dial(ctx, rawURL, nil)
+	query := u.Query()
+	query.Set("isMsgResp", "true")
+	u.RawQuery = query.Encode()
+	conn, httpResp, err := websocket.Dial(ctx, u.String(), nil)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -219,10 +220,10 @@ func (w *JSWebSocket) dial(ctx context.Context, urlStr string, req map[string]an
 		apiResp.ErrCode, apiResp.ErrMsg, apiResp.ErrDlt)
 }
 
-func (w *JSWebSocket) Dial(urlStr string, req map[string]any) (*http.Response, error) {
+func (w *JSWebSocket) Dial(urlStr string, _ http.Header) (*http.Response, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-	conn, httpResp, err := w.dial(ctx, urlStr, req)
+	conn, httpResp, err := w.dial(ctx, urlStr)
 	if err == nil {
 		w.conn = conn
 	}

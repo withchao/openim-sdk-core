@@ -17,9 +17,6 @@
 package interaction
 
 import (
-	"encoding/base64"
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -72,13 +69,8 @@ func (d *Default) ReadMessage() (int, []byte, error) {
 	return d.conn.ReadMessage()
 }
 
-func (d *Default) Dial(urlStr string, req map[string]any) (*http.Response, error) {
-	reqData, err := json.Marshal(req)
-	if err != nil {
-		return nil, err
-	}
-	rawURL := fmt.Sprintf("%s?v=%s", urlStr, base64.RawURLEncoding.EncodeToString(reqData))
-	conn, httpResp, err := websocket.DefaultDialer.Dial(rawURL, nil)
+func (d *Default) Dial(urlStr string, requestHeader http.Header) (*http.Response, error) {
+	conn, httpResp, err := websocket.DefaultDialer.Dial(urlStr, requestHeader)
 	if err == nil {
 		d.conn = conn
 	}
